@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iris-brain"
+version = "0.2.0"
+description = "Asistente conversacional de voz para Windows con herramientas asíncronas"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.28,<1", "pydantic-settings>=2.6,<3"]
+
+[project.optional-dependencies]
+voice = ["sounddevice>=0.5,<1", "vosk>=0.3.45,<1", "websockets>=14,<18", "pywin32>=306; sys_platform == 'win32'"]
+test = ["pytest>=8,<10", "pytest-asyncio>=0.24,<2"]
+
+[project.scripts]
+iris = "iris.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["iris*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
