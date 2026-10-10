@@ -24,9 +24,34 @@ El principio de diseño central: **el modelo de lenguaje decide, nunca ejecuta d
 
 ## 📍 Estado actual del proyecto
 
+### Asistente de voz nativo — prototipo 0.2
+
+El arranque principal es una aplicación de audio en Windows: **micrófono → conversación
+→ herramientas → respuesta por voz**. El núcleo Python administra
+trabajos asíncronos, cancelación y adaptadores de OpenAI, Gemini y Grok.
+
+La **demo sin claves** escucha con Vosk local y habla con la voz española de Windows;
+usa un diálogo limitado y anuncia que la investigación es simulada. La conversación
+real usa OpenAI Realtime por WebSocket y proveedores de investigación, pendiente de
+validación con credenciales. El ESP32 todavía no está conectado al backend.
+
+Durante las pruebas, `--monitor` muestra una ventana de escritorio con ojos,
+estados, tareas y transcripciones. Observa la conversación; los pedidos y resultados
+siguen siendo por voz. `--preview` permite ver una escena simulada sin micrófono.
+La ventana se puede retirar al montar el robot: las señales `idle`, `listening`,
+`thinking` y `speaking` quedan disponibles para un adaptador de la pantalla física.
+El transporte de audio del ESP32 y ese adaptador todavía necesitan implementación.
+La ventana de escritorio es temporal y se retirará al mostrar los estados en la pantalla física.
+
+- [Inicio en Windows](docs/INICIO_WINDOWS.md)
+- [Voz nativa: uso, arquitectura y límites](docs/VOZ_NATIVA.md)
+- [Revisión del firmware y arquitectura del cerebro](docs/CEREBRO.md)
+
+### Hardware publicado
+
 Este repositorio se está construyendo de forma incremental, en paralelo a las pruebas físicas del prototipo. Por ahora está publicado:
 
-- ✅ **Animación base de ojos en pantalla OLED (ESP32 + SSD1306 128x64 I2C)** — el "estado neutral" del rostro expresivo: ojos grandes y azules con parpadeo periódico, que da la primera sensación de "vida" a la interfaz. Es la base sobre la que se construirá la máquina de estados completa (escuchando, procesando, duda/atención, hablando).
+- ✅ **Animación de ojos OLED, máquina de estados y micrófono INMP441 por I2S**. El sketch más reciente detecta nivel de sonido por RMS y activa la expresión de escucha. Es una prueba de hardware; todavía no transmite audio ni reconoce palabras.
 
 🔜 Próximamente se irán sumando el resto de los módulos del sistema: pipeline de voz (STT → LLM → TTS), integración de herramientas IoT, percepción visual, y memoria de largo plazo.
 
@@ -58,9 +83,11 @@ TOOL MANAGER (gestor de herramientas)
 | C++ / Arduino (ESP32) | Firmware de tiempo real para sensores, actuadores y pantalla |
 | SQLite / Chroma | Memoria de largo plazo (RAG) |
 | MQTT | Comunicación entre Raspberry Pi central y nodos ESP32 |
-| Claude API | Razonamiento y selección de herramientas |
-| Whisper | Reconocimiento de voz (STT) |
-| Piper TTS / ElevenLabs | Síntesis de voz |
+| OpenAI Realtime / proveedores configurables | Audio nativo por WebSocket; pendiente de prueba con API real |
+| Gemini / Grok con búsqueda | Investigación con fuentes, fuera de la ruta inmediata de voz |
+| GPT por Responses | Análisis complejo delegado |
+| Vosk / Windows SAPI | Reconocimiento y voz local de la demo, sin APIs |
+| Whisper / Piper / otros STT y TTS | Candidatos para la variante local definitiva |
 | YOLOv8 / MobileNet | Visión por computadora |
 | Home Assistant | Middleware de integración IoT |
 
