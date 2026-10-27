@@ -74,7 +74,7 @@ class DesktopMonitor:
             return False
         snapshot = self.feedback.snapshot
         if snapshot != self.previous:
-            mode = {"demo": "DEMO LOCAL · SIN CLAVES", "live": "SESIÓN CON APIs", "preview": "VISTA SIMULADA · SIN MICRÓFONO"}.get(snapshot.mode, snapshot.mode)
+            mode = {"demo": "DEMO LOCAL · SIN CLAVES", "live": "SESIÓN CON APIs", "claude": "CEREBRO CLAUDE · USA CRÉDITOS", "preview": "VISTA SIMULADA · SIN MICRÓFONO"}.get(snapshot.mode, snapshot.mode)
             self.mode.configure(text=mode)
             footer = "Vista de estados ilustrativos · audio apagado. Cerrar la ventana termina la vista." if snapshot.mode == "preview" else "Hablá con Iris. Esta ventana observa el sistema. Cerrar la ventana termina la sesión."
             self.footer.configure(text=footer)

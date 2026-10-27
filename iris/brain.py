@@ -4,7 +4,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 
-from .tools import ToolManager
+from .tools import APPROVAL_TOOLS, ToolManager
 
 TERMINAL = {"completed", "failed", "cancelled"}
 
@@ -53,7 +53,7 @@ class Brain:
             raise ValueError("Registro de tareas lleno; reintentá en unos minutos.")
         job = Job(owner, call_id, name, arguments)
         self.jobs[job.id] = job
-        if name == "open_url":
+        if name in APPROVAL_TOOLS:
             job.status = "awaiting_approval"
         else:
             job.task = asyncio.create_task(self._run(job))

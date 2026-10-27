@@ -43,6 +43,10 @@ La ventana se puede retirar al montar el robot: las señales `idle`, `listening`
 El transporte de audio del ESP32 y ese adaptador todavía necesitan implementación.
 La ventana de escritorio es temporal y se retirará al mostrar los estados en la pantalla física.
 
+**Cerebro con Claude** (`python -m iris --claude`): conversa, busca en la web y abre URLs o apps
+hablando natural, usando créditos de la API de Anthropic y ElevenLabs para el oído y la voz.
+
+- [Cerebro con Claude](docs/CLAUDE.md)
 - [Inicio en Windows](docs/INICIO_WINDOWS.md)
 - [Voz nativa: uso, arquitectura y límites](docs/VOZ_NATIVA.md)
 - [Revisión del firmware y arquitectura del cerebro](docs/CEREBRO.md)

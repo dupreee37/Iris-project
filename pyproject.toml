@@ -7,7 +7,7 @@ name = "iris-brain"
 version = "0.2.0"
 description = "Asistente conversacional de voz para Windows con herramientas asíncronas"
 requires-python = ">=3.11"
-dependencies = ["httpx>=0.28,<1", "pydantic-settings>=2.6,<3"]
+dependencies = ["anthropic>=2,<3", "httpx>=0.28,<1", "pydantic-settings>=2.6,<3"]
 
 [project.optional-dependencies]
 voice = ["sounddevice>=0.5,<1", "vosk>=0.3.45,<1", "websockets>=14,<18", "pywin32>=306; sys_platform == 'win32'"]

@@ -53,6 +53,9 @@ class LocalRecognizer:
             return json.loads(self.recognizer.Result()).get("text", "")
         return None
 
+    def partial(self):
+        return json.loads(self.recognizer.PartialResult()).get("partial", "")
+
     def reset(self):
         self.recognizer.Reset()
 

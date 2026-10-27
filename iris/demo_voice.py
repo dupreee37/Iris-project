@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import uuid
 
 from .dialogue import DemoDialogue
@@ -61,9 +62,37 @@ class DemoConversation:
             await self.say("No pude terminar la tarea. Podés pedirme que lo intente otra vez.")
 
 
+async def listen(conversation, recognizer, speaker, feedback, input_device=None):
+    """Bucle de micrófono local compartido por la demo y el modo Claude (half duplex)."""
+    from .audio import AudioDevice
+
+    with AudioDevice(input_device=input_device, muted=speaker.busy.is_set) as device:
+        feedback.update(capturing=True)
+        muted = False
+        while True:
+            chunk = await device.read()
+            # Half duplex to prevent the Windows voice triggering itself.
+            if speaker.busy.is_set():
+                recognizer.reset()
+                muted = True
+                continue
+            if muted:
+                device.discard_input()
+                recognizer.reset()
+                muted = False
+                continue
+            text = recognizer.accept(chunk)
+            if inspect.isawaitable(text):  # CloudRecognizer retranscribe cada frase en la nube
+                text = await text
+            if text:
+                await conversation.hear(text)
+                if not getattr(recognizer, "keeps_audio", False):
+                    device.discard_input()
+                    recognizer.reset()
+
+
 async def run_demo(settings, model_path, input_device=None, *, feedback=None):
     import httpx
-    from .audio import AudioDevice
     from .brain import Brain
     from .local_speech import LocalRecognizer, WindowsSpeaker
     from .providers import Providers
@@ -81,26 +110,7 @@ async def run_demo(settings, model_path, input_device=None, *, feedback=None):
             feedback.update(ready=True)
             await conversation.say("Iris está lista en modo de prueba. Decí: Iris, necesito que investigues algo por mí.")
             print("[Micrófono local activo. Sin envío a APIs. Ctrl+C para salir.]")
-            with AudioDevice(input_device=input_device, muted=speaker.busy.is_set) as device:
-                feedback.update(capturing=True)
-                muted = False
-                while True:
-                    chunk = await device.read()
-                    # Demo uses half duplex to prevent the Windows voice triggering itself.
-                    if speaker.busy.is_set():
-                        recognizer.reset()
-                        muted = True
-                        continue
-                    if muted:
-                        device.discard_input()
-                        recognizer.reset()
-                        muted = False
-                        continue
-                    text = recognizer.accept(chunk)
-                    if text:
-                        await conversation.hear(text)
-                        device.discard_input()
-                        recognizer.reset()
+            await listen(conversation, recognizer, speaker, feedback, input_device)
         finally:
             await conversation.cancel()
             await brain.close()

@@ -18,6 +18,8 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--demo", action="store_true", help="Voz local y herramientas simuladas, sin claves (predeterminado)")
     mode.add_argument("--live", action="store_true", help="Conversación real con APIs; transmite audio y puede generar cargos")
+    mode.add_argument("--claude", action="store_true", help="Conversación con Claude: Vosk local, búsqueda web y acciones con confirmación; usa créditos de la API")
+    mode.add_argument("--voices", action="store_true", help="Listar voces de ElevenLabs para elegir IRIS_ELEVENLABS_VOICE_ID")
     mode.add_argument("--download-model", action="store_true", help="Preparar reconocimiento local español (~39 MB)")
     mode.add_argument("--check", action="store_true", help="Listar dispositivos y voz local, sin activar el micrófono")
     mode.add_argument("--render-demo", type=Path, metavar="WAV", help="Generar muestra hablada a archivo, sin activar dispositivos")
@@ -27,10 +29,13 @@ def main():
     parser.add_argument("--input-device", type=int)
     parser.add_argument("--output-device", type=int, help="Salida PortAudio para --live; la demo usa la salida predeterminada de Windows")
     args = parser.parse_args()
-    if args.monitor and (args.check or args.download_model or args.render_demo):
+    if args.monitor and (args.check or args.download_model or args.render_demo or args.voices):
         parser.error("--monitor acompaña a --demo o --live; --preview ya muestra la ventana")
     try:
-        if args.download_model:
+        if args.voices:
+            from .speech import list_elevenlabs_voices
+            print("\n".join(asyncio.run(list_elevenlabs_voices(Settings()))))
+        elif args.download_model:
             from .local_speech import download_model
             print(download_model())
         elif args.check:
@@ -51,7 +56,7 @@ def main():
             print(args.render_demo.resolve())
         else:
             from .feedback import Feedback
-            feedback = Feedback(mode="preview" if args.preview else "live" if args.live else "demo")
+            feedback = Feedback(mode="preview" if args.preview else "live" if args.live else "claude" if args.claude else "demo")
             async def run():
                 if args.preview:
                     from .monitor import preview
@@ -59,6 +64,9 @@ def main():
                 elif args.live:
                     from .realtime_voice import run_live
                     await run_live(Settings(), args.input_device, args.output_device, feedback=feedback)
+                elif args.claude:
+                    from .claude_voice import run_claude
+                    await run_claude(Settings(), args.model_path, args.input_device, args.output_device, feedback=feedback)
                 else:
                     from .demo_voice import run_demo
                     await run_demo(Settings(), args.model_path, args.input_device, feedback=feedback)
