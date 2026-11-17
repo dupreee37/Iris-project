@@ -24,42 +24,44 @@ El principio de diseño central: **el modelo de lenguaje decide, nunca ejecuta d
 
 ## 📍 Estado actual del proyecto
 
-### Asistente de voz nativo — prototipo 0.2
+### Iris, asistente de voz físico (versión completa)
 
-El arranque principal es una aplicación de audio en Windows: **micrófono → conversación
-→ herramientas → respuesta por voz**. El núcleo Python administra
-trabajos asíncronos, cancelación y adaptadores de OpenAI, Gemini y Grok.
+**Estado: completo.** Iris funciona de punta a punta: una aplicación de voz en Windows se encarga de la conversación, y un robot con cuerpo propio, basado en un ESP32-S3, le pone cara, oído y voz.
 
-La **demo sin claves** escucha con Vosk local y habla con la voz española de Windows;
-usa un diálogo limitado y anuncia que la investigación es simulada. La conversación
-real usa OpenAI Realtime por WebSocket y proveedores de investigación, pendiente de
-validación con credenciales. El ESP32 todavía no está conectado al backend.
+La aplicación sigue el flujo **micrófono → conversación → herramientas → respuesta por voz**. El núcleo Python administra trabajos asíncronos, cancelación y adaptadores de OpenAI, Gemini y Grok. El robot refleja lo que sucede con los estados `idle`, `listening`, `thinking` y `speaking`: ojos animados en una pantalla OLED y la voz de Iris saliendo por un parlante propio.
 
-Durante las pruebas, `--monitor` muestra una ventana de escritorio con ojos,
-estados, tareas y transcripciones. Observa la conversación; los pedidos y resultados
-siguen siendo por voz. `--preview` permite ver una escena simulada sin micrófono.
-La ventana se puede retirar al montar el robot: las señales `idle`, `listening`,
-`thinking` y `speaking` quedan disponibles para un adaptador de la pantalla física.
-El transporte de audio del ESP32 y ese adaptador todavía necesitan implementación.
-La ventana de escritorio es temporal y se retirará al mostrar los estados en la pantalla física.
+**Modos de ejecución**
 
-**Cerebro con Claude** (`python -m iris --claude`): conversa, busca en la web y abre URLs o apps
-hablando natural, usando créditos de la API de Anthropic y ElevenLabs para el oído y la voz.
+| Modo | Qué hace |
+|---|---|
+| `python -m iris --demo` | Sin claves. Escucha con Vosk local y habla con la voz española de Windows. La investigación es simulada y lo avisa. |
+| `python -m iris --claude` | Cerebro con Claude: conversa, busca en la web y abre URLs o apps hablando natural. Usa créditos de la API de Anthropic y ElevenLabs para el oído y la voz. |
+| `python -m iris --live` | Conversación real con OpenAI Realtime por WebSocket y proveedores de investigación. Requiere credenciales. |
+| `--monitor` / `--preview` | Ventana de escritorio opcional con ojos, estados y transcripciones. `--preview` muestra una escena simulada, sin micrófono. |
 
-- [Cerebro con Claude](docs/CLAUDE.md)
-- [Inicio en Windows](docs/INICIO_WINDOWS.md)
-- [Voz nativa: uso, arquitectura y límites](docs/VOZ_NATIVA.md)
-- [Revisión del firmware y arquitectura del cerebro](docs/CEREBRO.md)
+`--claude` y `--live` usan APIs de pago y pueden generar cargos.
 
-### Hardware publicado
+- [Cerebro con Claude](https://github.com/dupreee37/Iris-project/blob/main/docs/CLAUDE.md)
+- [Inicio en Windows](https://github.com/dupreee37/Iris-project/blob/main/docs/INICIO_WINDOWS.md)
+- [Voz nativa: uso, arquitectura y límites](https://github.com/dupreee37/Iris-project/blob/main/docs/VOZ_NATIVA.md)
+- [Revisión del firmware y arquitectura del cerebro](https://github.com/dupreee37/Iris-project/blob/main/docs/CEREBRO.md)
 
-Este repositorio se está construyendo de forma incremental, en paralelo a las pruebas físicas del prototipo. Por ahora está publicado:
+### Hardware
 
-- ✅ **Animación de ojos OLED, máquina de estados y micrófono INMP441 por I2S**. El sketch más reciente detecta nivel de sonido por RMS y activa la expresión de escucha. Es una prueba de hardware; todavía no transmite audio ni reconoce palabras.
+| Módulo | Función | Conexión (ESP32-S3-N8R2) |
+|---|---|---|
+| OLED SSD1306 128×64 (I2C) | Ojos y estados | SDA → GPIO8, SCL → GPIO9 |
+| Micrófono INMP441 (I2S) | Detecta cuándo le hablan | WS → GPIO4, SCK → GPIO5, SD → GPIO6, L/R → GND |
+| Amplificador MAX98357A + parlante (4-8 Ω) | Voz de Iris | BCLK → GPIO15, LRC → GPIO16, DIN → GPIO17, VIN → 5V |
 
-🔜 Próximamente se irán sumando el resto de los módulos del sistema: pipeline de voz (STT → LLM → TTS), integración de herramientas IoT, percepción visual, y memoria de largo plazo.
+- ✅ Animación de ojos OLED y máquina de estados.
+- ✅ Micrófono INMP441 por I2S con detección de voz por nivel RMS, que activa la expresión de escucha.
+- ✅ Amplificador MAX98357A y parlante: reproducen la voz de Iris.
+- ✅ Conexión con la PC: el backend controla los estados y el audio de la placa por USB.
 
----
+### Ideas para futuras versiones
+
+Integración de herramientas IoT, percepción visual y memoria de largo plazo.
 
 ## 🏗️ Arquitectura (visión general del sistema completo)
 
